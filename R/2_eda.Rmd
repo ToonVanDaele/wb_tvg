@@ -1,0 +1,11 @@
+---
+title: "2_explorative_data_analysis"
+author: "Toon Van Daele"
+date: "2024-07-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
