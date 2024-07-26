@@ -3,32 +3,32 @@
 library(tidyverse)
 library(wateRinfo)
 
+# Check supported variables / frequencies
+supported_variables(language = "nl")
+supported_frequencies(variable_name = "neerslag")
 
-# Vosselaar_P
+# Get stations with daily precipitation
+df_stn <- get_stations("neerslag", frequency = "day")
+# Get time series ID for daily precipitation at station in Vosselaar"
+voss_ts_id <- df_stn %>%
+  filter(station_name == "Vosselaar_P") %>%
+  pull(ts_id)
 
-#supported_frequencies(variable_name = "rainfall")
+df_in <- get_timeseries_tsid(ts_id = voss_ts_id, from = "2020-01-01", to = "2024-05-01")
 
-df_stn <- get_stations("rainfall", frequency = "day")
-voss <- df_stn %>%
-  filter(station_name == "Vosselaar_P")
+saveRDS(df_in, file = "./data/interim/vosselaar_p.rds")
 
-voss_ts_id <- "35169042"
+## Get PET values
 
-df_in <- get_timeseries_tsid(ts_id = "35169042", from = "2020-01-01", to = "2021-01-01")
+# list of stations with Penman Monteith PET at daily frequency
+stations_pet <- get_stations("verdamping_monteith", frequency = "day")
 
-str(df_in)
+# Get timeseries_id for Herentals - daily PET Penman Monteith
+herent_ts_id <- stations_pet %>%
+  filter(station_name == "Herentals_ME") %>%
+  pull(ts_id)
 
-#Check quality code (nog aan ta passen)
-df_in %>%
-  filter(is.na(Value))
+df_in <- get_timeseries_tsid(ts_id = herent_ts_id, from = "2020-01-01", to = "2024-05-01")
 
-df_in %>%
-  filter('Quality Code' == "130")
+saveRDS(df_in, file = "./data/interim/herentals_ME")
 
-df_pp <- df_in %>%
-  mutate(loc = "Vosselaar",
-         date = as.Date(Timestamp),
-         var = "P") %>%
-  dplyr::select(loc, date, var, value = Value)
-
-saveRDS(df_pp, file = "../data/interim/waterinfo_P.rds")
