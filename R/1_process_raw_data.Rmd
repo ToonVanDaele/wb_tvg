@@ -1,0 +1,203 @@
+---
+title: "1_process_raw_data"
+author: "Toon Van Daele"
+date: "2024-07-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+# Pre-processing raw data
+
+This script does pre-processing and first checks on time series
+
+It reads the datasets downloaded from multiple sources (filesnames 0_load_xxx.R).
+
+After processing, the data are stored in a single data frame for further analysis
+
+## Load raw datasets
+
+```{r}
+df_voss_p <- readRDS(file = "./data/interim/vosselaar_p.rds")
+df_heren_me <- readRDS(file = "./data/interim/herentals_ME.rds")
+df_kmi_retie <- readRDS(file = "./data/interim/kmi_retie.rds")
+```
+
+## Process Waterinfo data
+
+### Vosselaar precipitation
+
+Check quality code all '130' -> ok
+
+```{r}
+df_voss_p %>%
+  filter(!`Quality Code` == "130")
+```
+
+add column with station name and variable
+
+```{r}
+df_voss_p %>%
+  mutate(loc = "Vosselaar",
+         date = as.Date(Timestamp),
+         var = "P") %>%
+  dplyr::select(loc, date, var, value = Value) -> df_voss
+
+head(df_voss)
+```
+
+### Herental PET - Penman Monteith 
+
+Check Quality code == 130 (ok)
+
+```{r}
+df_heren_me %>%
+  filter(!`Quality Code` == "130") %>%
+  group_by(`Quality Code`) %>%
+  summarise(n = n())
+```
+
+(quality code table from https://www.milieuinfo.be/confluence/display/DDOV/Kwaliteitsvlaggen+hydrometrie-data+HIC+en+VMM
+
+code '-1' = missing      - replaced with 0 for the moment (to be changed later better estimation possible )
+code '180' = estimated   - we keep the estimated value
+
+Check when the missing data occur most
+
+```{r}
+df_heren_me %>%
+  filter(`Quality Code` == "-1") %>%
+  mutate(year = year(Timestamp)) %>%
+  group_by(year) %>%
+  summarise(n = n())
+```
+
+Set NA values to 0 (better estimation possible later)
+
+```{r}
+df_tmp <- df_heren_me %>%
+  mutate(Value = ifelse(is.na(Value), 0, Value))
+```
+
+```{r}
+df_tmp %>%
+  mutate(loc = "Herentals",
+         date = as.Date(Timestamp),
+         var = "PETpm") %>%
+  dplyr::select(loc, date, var, value = Value) -> df_herentals
+
+head(df_herentals)
+```
+
+```{r}
+ggplot(df_herentals, aes(x = date, y = value)) + geom_point()
+```
+
+
+We have negative values!! It's a problem with the original data from waterinfo.
+
+For the moment we set negative values equal to zero.
+Check later if KMI PET data is better
+
+```{r}
+df_herentals %>%
+  mutate(value = ifelse(value < 0, 0, value)) -> df_herentals
+```
+
+
+```{r}
+ggplot(df_herentals, aes(x = date, y = value)) + geom_point()
+```
+
+
+
+## Process KMI data
+
+```{r}
+glimpse(df_kmi_retie, )
+```
+
+We are only interested in the precipitation and temperature data (for the moment)
+
+NA values for precipitation mean no precipitation (change to 0)
+
+```{r}
+df_tmp <- df_kmi_retie %>%
+  mutate(datetime = as.POSIXct(timestamp, format="%Y-%m-%dT%H:%M")) %>%
+  dplyr::select(datetime, P = precip_quantity, t = temp) %>%
+  replace_na(list(P = 0)) %>%
+  arrange(datetime)
+
+head(df_tmp)
+```
+
+
+Some visual checks
+
+```{r}
+df_tmp %>%
+  ggplot(aes(x = datetime, y = t)) + geom_line()
+```
+
+The hourly data need to be summarised to daily data:
+  - temperature -> mean()
+  - precipitation -> sum()
+
+```{r}
+df_tmp %>%
+  mutate(date = as.Date(datetime)) %>%
+  group_by(date) %>%
+  summarise(P = sum(P),
+            t = mean(t)) -> df_tmp_daily
+```
+
+Long format
+
+```{r}
+df_tmp_daily %>%
+  mutate(loc = "Retie") %>%
+  pivot_longer(cols = c("P", "t"), names_to = "var") -> df_retie_long
+
+head(df_retie_long)
+```
+
+
+## Join datasets
+
+```{r}
+df_voss %>%
+  rbind(df_herentals, df_retie_long) %>%
+  mutate(var = as.factor(var),
+         loc = as.factor(loc)) -> df_meteo
+
+unique(df_meteo$var)
+```
+
+
+## Some visual checks
+
+```{r}
+df_meteo %>%
+  filter(var == "P") %>%
+  ggplot(aes(x = date, y = value)) + geom_line()
+```
+
+```{r}
+df_meteo %>%
+  filter(loc == "Retie" & var == "t" | loc == "Herentals" & var == "PETpm") %>%
+  ggplot(aes(x = date, y = value, colour = var)) + geom_line()
+```
+
+```{r}
+df_meteo %>%
+  filter(loc == "Retie" & var == "t" | loc == "Herentals" & var == "PETpm") %>%
+  dplyr::select(loc, date, var, value) %>%
+  pivot_wider(names_from = c("var", "loc"), values_from = "value") %>%
+  ggplot(aes(x = t_Retie, y = PETpm_Herentals)) + geom_point()
+```
+
+
+
