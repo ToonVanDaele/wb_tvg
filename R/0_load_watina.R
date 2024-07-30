@@ -3,6 +3,7 @@
 library(tidyverse)
 library(watina)
 library(sf)
+library(assertthat)
 
 # This script downloads data from watina at predefined locations
 
@@ -42,18 +43,22 @@ leaf_map <-
 
 leaf_map
 
-# Choose locations to load measurement data
-df_tvg_selected <- data.frame(loc_code = c("TVGP023",
-                                           "TVGP030"))
-
-
 # Load level data
+tvg_locs <- get_locs(con = watina, loc_vec = c("TVGP023",
+                                               "TVGP030"))
 
+tvg_level <- get_level(locs = tvg_locs,
+                       con = watina,
+                       startdate = "01-01-2020",
+                       enddate = "01-01-2024",
+                       collect = TRUE)
+
+saveRDS(tvg_level, file = "./data/interim/watina_level.rds")
 
 # Load chemical data
 tvg_chem <- get_chem(locs = df_tvg_selected,
                      con = watina,
-                     startdate = "01-01-2010",
+                     startdate = "01-01-2015",
                      collect = TRUE)
 
 saveRDS(tvg_chem, file = "./data/interim/watina_chem.rds")

@@ -21,9 +21,11 @@ After processing, the data are stored in a single data frame for further analysi
 ## Load raw datasets
 
 ```{r}
-df_voss_p <- readRDS(file = "./data/interim/vosselaar_p.rds")
-df_heren_me <- readRDS(file = "./data/interim/herentals_ME.rds")
-df_kmi_retie <- readRDS(file = "./data/interim/kmi_retie.rds")
+df_voss_p <- readRDS(file = "data/interim/vosselaar_p.rds")
+df_heren_me <- readRDS(file = "data/interim/herentals_ME.rds")
+df_kmi_retie <- readRDS(file = "data/interim/kmi_retie.rds")
+df_watina_level <- readRDS(file = "data/interim/watina_level.rds")
+df_watina_chem <- readRDS(file = "data/interim/watina_chem.rds")
 ```
 
 ## Process Waterinfo data
@@ -199,5 +201,12 @@ df_meteo %>%
   ggplot(aes(x = t_Retie, y = PETpm_Herentals)) + geom_point()
 ```
 
+
+# Watina data
+
+```{r}
+df_watina_level %>%
+  ggplot(aes(x = Datum, y = mMaaiveld, colour = loc_code)) + geom_point() + geom_line()
+```
 
 
