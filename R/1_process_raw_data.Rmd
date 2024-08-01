@@ -14,18 +14,27 @@ library(tidyverse)
 
 This script does pre-processing and first checks on time series
 
-It reads the datasets downloaded from multiple sources (filesnames 0_load_xxx.R).
+It reads the data sets downloaded from multiple sources (filenames 0_load_xxx.R).
 
 After processing, the data are stored in a single data frame for further analysis
 
+
 ## Load raw datasets
 
+  - precipitation
+  - potential evapotranspiration
+  - water level
+  - groundwater head
+
+(note: chemical analysis data are not included)
+
 ```{r}
-df_voss_p <- readRDS(file = "data/interim/vosselaar_p.rds")
-df_heren_me <- readRDS(file = "data/interim/herentals_ME.rds")
-df_kmi_retie <- readRDS(file = "data/interim/kmi_retie.rds")
-df_watina_level <- readRDS(file = "data/interim/watina_level.rds")
-df_watina_chem <- readRDS(file = "data/interim/watina_chem.rds")
+getwd()
+df_voss_p <- readRDS(file = "../data/interim/vosselaar_p.rds")
+df_heren_me <- readRDS(file = "../data/interim/herentals_ME.rds")
+df_kmi_retie <- readRDS(file = "../data/interim/kmi_retie.rds")
+df_watina_level <- readRDS(file = "../data/interim/watina_level.rds")
+df_watina_chem <- readRDS(file = "../data/interim/watina_chem.rds")
 ```
 
 ## Process Waterinfo data
@@ -124,16 +133,15 @@ glimpse(df_kmi_retie, )
 
 We are only interested in the precipitation and temperature data (for the moment)
 
-NA values for precipitation mean no precipitation (change to 0)
+The KMI timestamp is transformed to a  posixct datetime variable. All in UTC.
 
 ```{r}
 df_tmp <- df_kmi_retie %>%
-  mutate(datetime = as.POSIXct(timestamp, format="%Y-%m-%dT%H:%M")) %>%
+  mutate(datetime = as.POSIXct(timestamp, format="%Y-%m-%dT%H:%M", tz = "UTC")) %>%
+  filter(!is.na(datetime)) %>%
   dplyr::select(datetime, P = precip_quantity, t = temp) %>%
   replace_na(list(P = 0)) %>%
   arrange(datetime)
-
-head(df_tmp)
 ```
 
 
@@ -166,35 +174,60 @@ df_tmp_daily %>%
 head(df_retie_long)
 ```
 
+## Process Watina data
+
+```{r}
+df_watina_level %>%
+  ggplot(aes(x = Datum, y = mMaaiveld, colour = loc_code)) + geom_point() + geom_line()
+```
+
+Change into common format (location, date, variable, value)
+
+```{r}
+df_watina_level |>
+  mutate(var = "mMv") |>
+  dplyr::select(loc = loc_code,
+                date = Datum,
+                var,
+                value = mMaaiveld) -> df_watina_long
+glimpse(df_watina_long)
+```
+
 
 ## Join datasets
 
 ```{r}
 df_voss %>%
-  rbind(df_herentals, df_retie_long) %>%
+  rbind(df_herentals, df_retie_long, df_watina_long) %>%
   mutate(var = as.factor(var),
-         loc = as.factor(loc)) -> df_meteo
+         loc = as.factor(loc)) -> tvg_hydr
 
-unique(df_meteo$var)
+unique(tvg_hydr$var)
 ```
 
 
 ## Some visual checks
 
 ```{r}
-df_meteo %>%
+ggplot(tvg_hydr, aes(x = date, y = value, colour = paste0(var,loc))) + geom_point()
+```
+
+
+
+```{r}
+tvg_hydr %>%
   filter(var == "P") %>%
   ggplot(aes(x = date, y = value)) + geom_line()
 ```
 
 ```{r}
-df_meteo %>%
+tvg_hydr %>%
   filter(loc == "Retie" & var == "t" | loc == "Herentals" & var == "PETpm") %>%
   ggplot(aes(x = date, y = value, colour = var)) + geom_line()
 ```
 
 ```{r}
-df_meteo %>%
+tvg_hydr %>%
   filter(loc == "Retie" & var == "t" | loc == "Herentals" & var == "PETpm") %>%
   dplyr::select(loc, date, var, value) %>%
   pivot_wider(names_from = c("var", "loc"), values_from = "value") %>%
@@ -202,11 +235,9 @@ df_meteo %>%
 ```
 
 
-# Watina data
+Save data set for later analysis
 
 ```{r}
-df_watina_level %>%
-  ggplot(aes(x = Datum, y = mMaaiveld, colour = loc_code)) + geom_point() + geom_line()
+saveRDS(tvg_hydr, file = "../data/interim/tvg_hydr.rds")
 ```
-
 
