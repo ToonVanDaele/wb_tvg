@@ -7,5 +7,64 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+source("function.r")
 ```
+
+# Load data
+
+```{r}
+getwd()
+```
+
+
+```{r}
+tvg_hydr <- readRDS(file = "../data/interim/tvg_hydr.rds")
+```
+
+
+# Calculate net precipitation
+
+Net precipitation daily
+
+$$ Net P = P - Epot $$
+
+Summary of the locations, variables and periods
+
+```{r}
+head(tvg_hydr)
+```
+
+
+```{r}
+tvg_hydr %>%
+  group_by(loc, var) %>%
+  summarise(firstdate = min(date),
+            lastdate = max(date),
+            count = n())
+```
+
+We select Retie for precipitation (P) and Herentals for potential evapotranspiration (PETpm)
+
+```{r}
+
+tvg_hydr %>%
+  filter(date >= "2021-01-01" & date <= "2024-04-30") -> df_in
+
+df_out <- calculate_netP(df_in = df_in, loc_P = "Retie", loc_PETpm = "Herentals")
+
+tvg_hydr <- rbind(tvg_hydr, df_out)           
+```
+
+
+Plot 
+
+```{r}
+tvg_hydr %>%
+    filter(date >= "2021-01-01" & date <= "2024-04-30") %>%
+    filter(loc %in% c("Retie", "TVGP023")) %>%
+    filter(var %in% c("mMv", "NetP")) %>%
+ggplot(aes(x = date, y = value)) + geom_point() + geom_line() + facet_grid(~var)
+```
+
 
