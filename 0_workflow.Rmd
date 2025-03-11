@@ -1,0 +1,55 @@
+---
+title: "Untitled"
+author: "Toon Van Daele"
+date: "2024-08-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Workflow for the water balance calculation
+
+There are multiple sources meteorologic data:
+
+  - KMI
+  - Watinfo
+  - KNMI
+  - Euradclim
+
+There are 2 different types of data:
+
+  - Rain gauges (point information)
+  - RADAR data (spatial)
+  
+The latter can be raw radar precipitation data or radar data corrected with actual rain gauge data.
+
+The spatial scales of the data are 1x1km, 5x5km and 10x10km 
+
+
+
+The minimum temporal scale considered for this analysis is precipitation on dialy basis.
+
+The KNMI, KMI en Euradclim use a different times for the daily rainfall:
+
+  - KMI  rainfall between 08h00 till 08h00 the next day
+  - KNMI rainfall between 12h00 till 12h00 the next day
+  - Euradclim rainfall between 00h00 till 00h00 
+  
+
+Some can be loaded with a script, others requirea manual download
+
+### Scripts
+
+The script used to load the data from the data sources have the prefix number '0_'.
+
+The data are stored in '/data/input' in a ascii format
+
+
+#### 1_process_raw_data.Rmd
+
+Processing of the raw. the processed data are stored in '/data/interim/' in a binary format '.rds'.
+(should not be excluded from git reposiory)
+
+#### 2_
