@@ -4,6 +4,7 @@ library(tidyverse)
 library(watina)
 library(sf)
 library(assertthat)
+source("R/get_level.R")
 
 # This script downloads data from watina at predefined locations
 
@@ -17,6 +18,7 @@ locs_tvg <- get_locs(watina,
                               xmax = 194000,
                               ymin = 225000,
                               ymax = 232000),
+                     loc_type = c("P", "S"),
                      collect = TRUE)
 
 # Create sf object
@@ -43,20 +45,24 @@ leaf_map <-
 
 leaf_map
 
-# Load level data
-tvg_locs <- get_locs(con = watina, loc_vec = c("TVGP023",
-                                               "TVGP030"))
+sel_loc_vec <- c("TVGP023", "TVGP026", "TVGP072", "TVGP073", "TVGP305",
+                 "TVGS020", "TVGS021", "TVGS060")
 
-tvg_level <- get_level(locs = tvg_locs,
+# Load level data
+locs_tvg_sel <- get_locs(con = watina, loc_vec = sel_loc_vec)
+
+tvg_level <- get_level(locs = locs_tvg_sel,
                        con = watina,
                        startdate = "01-01-2020",
-                       enddate = "01-01-2024",
+                       enddate = "01-01-2026",
                        collect = TRUE)
 
 saveRDS(tvg_level, file = "./data/interim/watina_level.rds")
 
+
+
 # Load chemical data
-tvg_chem <- get_chem(locs = df_tvg_selected,
+tvg_chem <- get_chem(locs = data.frame(loc_code = sel_loc_vec),
                      con = watina,
                      startdate = "01-01-2015",
                      collect = TRUE)

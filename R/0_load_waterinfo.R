@@ -28,7 +28,7 @@ herent_ts_id <- stations_pet %>%
   filter(station_name == "Herentals_ME") %>%
   pull(ts_id)
 
-df_in <- get_timeseries_tsid(ts_id = herent_ts_id, from = "2020-01-01", to = "2024-05-01")
+df_in <- get_timeseries_tsid(ts_id = herent_ts_id, from = "2020-01-01", to = "2025-12-31")
 
 saveRDS(df_in, file = "./data/interim/herentals_ME.rds")
 
