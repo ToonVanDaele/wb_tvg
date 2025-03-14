@@ -28,7 +28,6 @@ The latter can be raw radar precipitation data or radar data corrected with actu
 The spatial scales of the data are 1x1km, 5x5km and 10x10km 
 
 
-
 The minimum temporal scale considered for this analysis is precipitation on dialy basis.
 
 The KNMI, KMI en Euradclim use a different times for the daily rainfall:
@@ -38,18 +37,22 @@ The KNMI, KMI en Euradclim use a different times for the daily rainfall:
   - Euradclim rainfall between 00h00 till 00h00 
   
 
-Some can be loaded with a script, others requirea manual download
+Some can be loaded with a script, others require a manual download
 
 ### Scripts
 
 The script used to load the data from the data sources have the prefix number '0_'.
 
-The data are stored in '/data/input' in a ascii format
+The data are stored in '/data/input' (ascii format)
 
 
 #### 1_process_raw_data.Rmd
 
 Processing of the raw. the processed data are stored in '/data/interim/' in a binary format '.rds'.
-(should not be excluded from git reposiory)
+(should be excluded from git reposiory)
 
-#### 2_
+#### 2_eda.Rmd 
+
+Exploratory data analysis
+
+#### 3_

@@ -29,7 +29,7 @@ After processing, the data are stored in a single data frame for further analysi
 (note: chemical analysis data are not included)
 
 ```{r}
-getwd()
+#getwd()
 df_voss_p <- readRDS(file = "../data/interim/vosselaar_p.rds")
 df_heren_me <- readRDS(file = "../data/interim/herentals_ME.rds")
 df_kmi_retie <- readRDS(file = "../data/interim/kmi_retie.rds")
