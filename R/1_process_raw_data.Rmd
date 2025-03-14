@@ -41,7 +41,7 @@ df_watina_chem <- readRDS(file = "../data/interim/watina_chem.rds")
 
 ### Vosselaar precipitation
 
-Check quality code all '130' -> ok
+Check quality code all '130' -> i.e. ok
 
 ```{r}
 df_voss_p %>%
@@ -147,10 +147,20 @@ df_tmp <- df_kmi_retie %>%
 
 Some visual checks
 
+
+Temperature 
+
 ```{r}
 df_tmp %>%
   ggplot(aes(x = datetime, y = t)) + geom_line()
 ```
+
+precipitation
+```{r}
+df_tmp %>%
+  ggplot(aes(x = datetime, y = P)) + geom_line()
+```
+
 
 The hourly data need to be summarised to daily data:
   - temperature -> mean()
@@ -178,18 +188,18 @@ head(df_retie_long)
 
 ```{r}
 df_watina_level %>%
-  ggplot(aes(x = Datum, y = mMaaiveld, colour = loc_code)) + geom_point() + geom_line()
+  ggplot(aes(x = Datum, y = mTAW, colour = loc_code)) + geom_point() + geom_line()
 ```
 
 Change into common format (location, date, variable, value)
 
 ```{r}
 df_watina_level |>
-  mutate(var = "mMv") |>
+  mutate(var = "mTAW") |>
   dplyr::select(loc = loc_code,
                 date = Datum,
                 var,
-                value = mMaaiveld) -> df_watina_long
+                value = mTAW) -> df_watina_long
 glimpse(df_watina_long)
 ```
 

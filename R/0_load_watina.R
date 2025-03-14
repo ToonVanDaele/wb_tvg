@@ -49,7 +49,9 @@ sel_loc_vec <- c("TVGP023", "TVGP026", "TVGP072", "TVGP073", "TVGP305",
                  "TVGS020", "TVGS021", "TVGS060")
 
 # Load level data
-locs_tvg_sel <- get_locs(con = watina, loc_vec = sel_loc_vec)
+locs_tvg_sel <- get_locs(con = watina,
+                         loc_type = c("P", "S"),
+                         loc_vec = sel_loc_vec)
 
 tvg_level <- get_level(locs = locs_tvg_sel,
                        con = watina,
